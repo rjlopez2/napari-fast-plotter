@@ -15,14 +15,20 @@ contributions:
       python_name: napari_fast_plotter._sample_data:make_sample_data
       title: Load sample data from fast plotter
     - id: napari-fast-plotter.make_qwidget
-      python_name: napari_fast_plotter._widget:ExampleQWidget
-      title: Make example QWidget
-    - id: napari-fast-plotter.make_magic_widget
-      python_name: napari_fast_plotter._widget:example_magic_widget
-      title: Make example magic widget
-    - id: napari-fast-plotter.make_func_widget
-      python_name: napari_fast_plotter._widget:example_function_widget
-      title: Make example function widget
+      python_name: napari_fast_plotter._widget:Plotter
+      title: Make Pyqtgraph plotter
+    # - id: napari-fast-plotter.make_qwidget
+    #   python_name: napari_fast_plotter._widget:ExampleQWidget
+    #   title: Make example QWidget
+    # - id: napari-fast-plotter.make_magic_widget
+    #   python_name: napari_fast_plotter._widget:example_magic_widget
+    #   title: Make example magic widget
+    # - id: napari-fast-plotter.make_func_widget
+    #   python_name: napari_fast_plotter._widget:example_function_widget
+    #   title: Make example function widget
+    # - id: napari-fast-plotter.threshold
+    #   python_name: napari_fast_plotter._widget:threshold
+    #   title: testing new function widget
   readers:
     - command: napari-fast-plotter.get_reader
       accepts_directories: false
@@ -39,10 +45,14 @@ contributions:
       display_name: fast plotter
       key: unique_id.1
   widgets:
+    # - command: napari-fast-plotter.make_qwidget
+    #   display_name: Example QWidget
     - command: napari-fast-plotter.make_qwidget
-      display_name: Example QWidget
-    - command: napari-fast-plotter.make_magic_widget
-      display_name: Example Magic Widget
-    - command: napari-fast-plotter.make_func_widget
-      autogenerate: true
-      display_name: Example Function Widget
+      display_name: Pyqtgraph plotter
+    # - command: napari-fast-plotter.make_magic_widget
+    #   display_name: Example Magic Widget
+    # - command: napari-fast-plotter.threshold
+    #   display_name: testing new function widget
+    # - command: napari-fast-plotter.threshold
+    #   autogenerate: true
+    #   display_name: Example Function Widget
