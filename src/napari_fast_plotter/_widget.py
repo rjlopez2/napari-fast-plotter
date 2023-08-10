@@ -9,6 +9,7 @@ Replace code below according to your needs.
 from typing import TYPE_CHECKING
 
 import pyqtgraph as pg
+from qtpy import QtGui, QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QGridLayout,
@@ -18,6 +19,8 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from .utils import SelectorListItem, SelectorListModel, get_valid_image_layers
 
 if TYPE_CHECKING:
     pass
@@ -56,6 +59,10 @@ class Plotter(QWidget):
 
         self.tabs = QTabWidget()
         self.main_layout.addWidget(self.tabs)
+
+        self.selector = LayerSelector(self.viewer)
+        self.main_layout.addWidget(QtWidgets.QLabel("Layer Selector"))
+        self.main_layout.addWidget(self.selector)
 
         ###############################
         ######## create tabs ##########
@@ -102,6 +109,74 @@ class Plotter(QWidget):
 
         self.viewer.text_overlay.visible = True
         self.viewer.window.qt_viewer.canvas.measure_fps(callback=update_fps)
+
+        # handle events
+        self.viewer.layers.events.inserted.connect(
+            self._layer_list_changed_callback
+        )
+        self.viewer.layers.events.removed.connect(
+            self._layer_list_changed_callback
+        )
+
+    def _layer_list_changed_callback(self, event):
+        """Callback function for layer list changes.
+
+        Update the selector model on each layer list change to insert or remove items accordingly.
+        """
+        if event.type in ["inserted", "removed", "reordered"]:
+            value = event.value
+            etype = event.type
+            if value._type_string == "image" and value.ndim in [3, 4]:
+                self.selector.update_model(value, etype)
+
+
+class LayerSelector(QtWidgets.QListView):
+    """Subclass of QListView for selection of 3D/4D napari image layers.
+
+    This widget contains a list of all 4D images layer currently in the napari viewer layers list. All items have a
+    checkbox for selection. It is not meant to be directly docked to the napari viewer, but needs a napari viewer
+    instance to work.
+
+    Attributes:
+        napari_viewer : napari.Viewer
+        parent : Qt parent widget / window, default None
+    """
+
+    def __init__(self, napari_viewer, model=None, parent=None):
+        super().__init__(parent)
+        self.napari_viewer = napari_viewer
+        model = SelectorListModel()
+        self.setModel(model)
+        self.update_model(None, None)
+
+    def update_model(self, layer, action):
+        """
+        Update the underlying model data (clear and rewrite) and emit an itemChanged event.
+        The size of the widget is adjusted to the number of items displayed.
+
+        :param layer: changed layer (inserted or removed from layer list)
+        :param action: type of change (inserted / removed) -> add or remove item to model
+        """
+        if layer:
+            if action == "inserted":  # add layer to model
+                item = SelectorListItem(layer)
+                self.model().insertRow(0, item)
+            elif action == "removed":  # remove layer from model
+                item_idx = self.model().get_item_idx_by_text(layer.name)
+                self.model().removeRow(item_idx)
+            elif action == "reordered":
+                pass  # TODO:  reordering callback not implemented yet
+        else:  # if no layer was given generate completely new model
+            self.model().clear()
+            for layer in get_valid_image_layers(self.napari_viewer.layers):
+                item = SelectorListItem(layer)
+                self.model().insertRow(0, item)
+        # match widget size to item count
+        self.setMaximumHeight(
+            self.sizeHintForRow(0) * self.model().rowCount()
+            + 2 * self.frameWidth()
+        )
+        self.model().itemChanged.emit(QtGui.QStandardItem())
 
 
 class VHGroup:
